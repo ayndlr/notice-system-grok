@@ -25,8 +25,12 @@ const Notice = mongoose.model(
   }),
 );
 
+// New Login Credentials
 app.post("/api/login", (req, res) => {
-  if (req.body.password === "BoardMaster2026!") {
+  if (
+    req.body.username === "ISSTICKZ" &&
+    req.body.password === "isstickz@661"
+  ) {
     res.json({ success: true });
   } else {
     res.status(401).json({ success: false });
