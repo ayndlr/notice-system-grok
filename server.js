@@ -53,6 +53,4 @@ app.delete("/api/notices/:id", async (req, res) => {
   res.json({ message: "Deleted" });
 });
 
-app.listen(5000, () =>
-  console.log("🚀 Server running on http://localhost:5000"),
-);
+app.listen(5000, () => console.log("🚀 Server running in render"));
