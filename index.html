@@ -55,6 +55,12 @@
                     transform: scale(1) translateY(0);
                 }
             }
+
+            /* Mobile scroll fix for modals */
+            .modal-container {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
         </style>
     </head>
     <body class="bg-[#09090b] text-zinc-100 min-h-screen">
@@ -310,10 +316,10 @@
             <!-- Post/Edit Modal -->
             <div
                 id="postModal"
-                class="bg-zinc-900 border border-white/10 rounded-[2rem] w-full max-w-2xl overflow-hidden hidden modal-enter"
+                class="bg-zinc-900 border border-white/10 rounded-[2rem] w-full max-w-2xl overflow-hidden hidden modal-enter modal-container"
             >
                 <div
-                    class="p-8 border-b border-white/5 flex justify-between items-center bg-white/5"
+                    class="p-8 border-b border-white/5 flex justify-between items-center bg-white/5 sticky top-0 z-10"
                 >
                     <h3 id="pModalTitle" class="text-2xl font-bold">
                         Create New Notice
@@ -347,7 +353,7 @@
                             >
                             <select
                                 id="pCat"
-                                class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3.5 outline-none focus:border-cyan-500 appearance-none"
+                                class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3.5 outline-none focus:border-cyan-500 appearance-none text-white"
                             >
                                 <option value="urgent">Urgent</option>
                                 <option value="events">Events</option>
@@ -422,7 +428,7 @@
             <!-- View Detail Modal -->
             <div
                 id="viewModal"
-                class="bg-zinc-900 border border-white/10 rounded-[2.5rem] w-full max-w-2xl hidden modal-enter overflow-hidden relative"
+                class="bg-zinc-900 border border-white/10 rounded-[2.5rem] w-full max-w-2xl hidden modal-enter overflow-hidden relative modal-container"
             >
                 <button
                     onclick="closeModals()"
@@ -449,6 +455,10 @@
             window.onload = () => {
                 updateAuthUI();
                 fetchNotices();
+                // Clear sticky inputs on reload
+                document.getElementById("searchInput").value = "";
+                document.getElementById("lUser").value = "";
+                document.getElementById("lPass").value = "";
             };
 
             // DATA FLOW
@@ -478,9 +488,10 @@
                     const count = allNotices.filter(
                         (n) => n.category === cat,
                     ).length;
-                    document.querySelector(
+                    const el = document.querySelector(
                         `.count[data-cat="${cat}"]`,
-                    ).innerText = count;
+                    );
+                    if (el) el.innerText = count;
                 });
             }
 
@@ -508,8 +519,12 @@
                             ${
                                 isLoggedIn
                                     ? `
-                                <button onclick="event.stopPropagation(); openEditModal('${n._id}')" class="w-8 h-8 rounded-lg hover:bg-cyan-500/10 text-zinc-500 hover:text-cyan-400 transition"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
-                                <button onclick="event.stopPropagation(); deleteNotice('${n._id}')" class="w-8 h-8 rounded-lg hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                                <button onclick="event.stopPropagation(); openEditModal('${n._id}')" class="w-8 h-8 rounded-lg hover:bg-cyan-500/10 text-zinc-500 hover:text-cyan-400 transition flex items-center justify-center">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); deleteNotice('${n._id}')" class="w-8 h-8 rounded-lg hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition flex items-center justify-center">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
                             `
                                     : ""
                             }
@@ -565,9 +580,8 @@
                 document
                     .querySelectorAll('[id^="nav-"]')
                     .forEach((el) => el.classList.remove("active-filter"));
-                document
-                    .getElementById(`nav-${cat}`)
-                    .classList.add("active-filter");
+                const targetNav = document.getElementById(`nav-${cat}`);
+                if (targetNav) targetNav.classList.add("active-filter");
 
                 document.getElementById("mainHeading").innerText =
                     cat === "all"
@@ -593,9 +607,6 @@
                     .classList.add("active-filter");
                 document.getElementById("mainHeading").innerText =
                     "My Posted Notices";
-
-                // For simplicity, we define "My" as notices with the current admin name or just a placeholder logic
-                // In a real app, this would filter by user ID.
                 renderGrid(
                     allNotices.filter(
                         (n) =>
@@ -630,7 +641,6 @@
                 document.getElementById("pFileName").innerText =
                     "Select file (Max 5MB)";
                 tempAttachment = null;
-
                 showModal("postModal");
             }
 
@@ -688,7 +698,7 @@
                         closeModals();
                     }
                 } catch (err) {
-                    alert("Operation failed. Try again.");
+                    alert("Operation failed. Server might be down.");
                 } finally {
                     btn.disabled = false;
                     btn.innerText = editId ? "Save Changes" : "Publish Notice";
@@ -726,7 +736,7 @@
                         <i class="fa-solid fa-calendar mr-1.5"></i> ${new Date(n.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                     </span>
                 </div>
-                <h2 class="text-4xl font-black mb-8 leading-tight">${n.title}</h2>
+                <h2 class="text-3xl md:text-4xl font-black mb-8 leading-tight">${n.title}</h2>
                 <div class="flex items-center gap-3 mb-10 pb-8 border-b border-white/5">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center text-zinc-900 font-bold">
                         ${n.author[0]}
@@ -736,23 +746,23 @@
                         <p class="text-[11px] text-zinc-500 uppercase tracking-widest font-medium">Official Contributor</p>
                     </div>
                 </div>
-                <div class="text-zinc-300 leading-relaxed text-lg whitespace-pre-wrap mb-10">
+                <div class="text-zinc-300 leading-relaxed text-base md:text-lg whitespace-pre-wrap mb-10">
                     ${n.content}
                 </div>
                 ${
                     n.attachment
                         ? `
-                    <div class="bg-white/5 rounded-2xl p-6 border border-white/5 flex items-center justify-between group">
+                    <div class="bg-white/5 rounded-2xl p-6 border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-cyan-400 text-xl">
                                 <i class="fa-solid fa-file-lines"></i>
                             </div>
-                            <div>
-                                <p class="text-sm font-bold text-white">${n.attachment.name}</p>
+                            <div class="overflow-hidden">
+                                <p class="text-sm font-bold text-white truncate max-w-[150px] md:max-w-xs">${n.attachment.name}</p>
                                 <p class="text-xs text-zinc-500 uppercase tracking-widest">Document Attachment</p>
                             </div>
                         </div>
-                        <button onclick="downloadFile('${n.attachment.data}', '${n.attachment.name}')" class="px-6 py-3 bg-white hover:bg-cyan-400 text-zinc-900 font-bold rounded-xl transition">
+                        <button onclick="downloadFile('${n.attachment.data}', '${n.attachment.name}')" class="w-full sm:w-auto px-6 py-3 bg-white hover:bg-cyan-400 text-zinc-900 font-bold rounded-xl transition">
                             Download
                         </button>
                     </div>
@@ -760,7 +770,7 @@
                         : ""
                 }
                 <div class="mt-12 flex justify-center">
-                    <button onclick="closeModals()" class="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition">Close Preview</button>
+                    <button onclick="closeModals()" class="w-full md:w-auto px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition">Close Preview</button>
                 </div>
             `;
                 showModal("viewModal");
@@ -799,6 +809,8 @@
                 const pass = document.getElementById("lPass").value;
                 const btn = document.getElementById("lBtn");
 
+                if (!user || !pass) return alert("Please enter both fields.");
+
                 btn.disabled = true;
                 btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
 
@@ -817,6 +829,9 @@
                         localStorage.setItem("nb_auth", "true");
                         updateAuthUI();
                         closeModals();
+                        // Clear inputs after success
+                        document.getElementById("lUser").value = "";
+                        document.getElementById("lPass").value = "";
                     } else {
                         alert("Unauthorized Access!");
                     }
@@ -840,22 +855,20 @@
             }
 
             function updateAuthUI() {
-                document
-                    .getElementById("postBtn")
-                    .classList.toggle("hidden", !isLoggedIn);
-                document
-                    .getElementById("nav-my")
-                    .classList.toggle("hidden", !isLoggedIn);
-                document.getElementById("authBtn").textContent = isLoggedIn
-                    ? "Logout"
-                    : "Login";
+                const postBtn = document.getElementById("postBtn");
+                const myNav = document.getElementById("nav-my");
+                const authBtn = document.getElementById("authBtn");
+
+                if (postBtn) postBtn.classList.toggle("hidden", !isLoggedIn);
+                if (myNav) myNav.classList.toggle("hidden", !isLoggedIn);
+                if (authBtn)
+                    authBtn.textContent = isLoggedIn ? "Logout" : "Login";
             }
 
             // MODAL WRAPPERS
             function showModal(id) {
-                document
-                    .getElementById("modalOverlay")
-                    .classList.remove("hidden");
+                const overlay = document.getElementById("modalOverlay");
+                overlay.classList.remove("hidden");
                 document
                     .querySelectorAll("#modalOverlay > div")
                     .forEach((d) => d.classList.add("hidden"));
