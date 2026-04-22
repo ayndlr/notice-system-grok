@@ -40,9 +40,27 @@
             .active-tab {
                 border-bottom: 3px solid #00d4ff;
                 color: #00d4ff;
+                background-color: rgba(255, 255, 255, 0.05);
             }
-            .hide-scrollbar::-webkit-scrollbar {
-                display: none;
+            select option {
+                background: #18181b;
+                color: white;
+            }
+            .loading-spinner {
+                border: 3px solid rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                border-top: 3px solid #00d4ff;
+                width: 24px;
+                height: 24px;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
             }
         </style>
     </head>
@@ -72,7 +90,7 @@
                     <input
                         id="searchInput"
                         type="text"
-                        placeholder="Search notices, authors..."
+                        placeholder="Search notices..."
                         class="w-full bg-white/5 border border-white/10 focus:border-cyan-400 rounded-2xl py-3 pl-11 pr-4 text-white outline-none transition"
                     />
                 </div>
@@ -177,7 +195,7 @@
                         id="noticesGrid"
                         class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
                     >
-                        <!-- Notices injected here -->
+                        <!-- Content loaded via JS -->
                     </div>
                 </div>
             </div>
@@ -213,12 +231,12 @@
                     <div>
                         <label
                             class="text-xs font-bold text-white/40 uppercase mb-2 block"
-                            >Your Display Name</label
+                            >Author Name</label
                         >
                         <input
                             id="formAuthor"
                             required
-                            placeholder="e.g. Dr. Smith"
+                            placeholder="e.g. Registrar's Office"
                             class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-cyan-400"
                         />
                     </div>
@@ -226,11 +244,12 @@
                         <div class="col-span-2 sm:col-span-1">
                             <label
                                 class="text-xs font-bold text-white/40 uppercase mb-2 block"
-                                >Notice Title</label
+                                >Title</label
                             >
                             <input
                                 id="formTitle"
                                 required
+                                placeholder="Notice title"
                                 class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-cyan-400"
                             />
                         </div>
@@ -246,7 +265,9 @@
                                 <option value="urgent">Urgent</option>
                                 <option value="events">Events</option>
                                 <option value="academic">Academic</option>
-                                <option value="admin" selected>General</option>
+                                <option value="general" selected>
+                                    General
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -259,6 +280,7 @@
                             id="formContent"
                             required
                             rows="4"
+                            placeholder="Description..."
                             class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-cyan-400 resize-none"
                         ></textarea>
                     </div>
@@ -288,7 +310,8 @@
                         </button>
                         <button
                             type="submit"
-                            class="flex-1 py-3 bg-cyan-500 text-zinc-950 rounded-xl hover:bg-cyan-400 transition font-bold"
+                            id="submitBtn"
+                            class="flex-1 py-3 bg-cyan-500 text-zinc-950 rounded-xl hover:bg-cyan-400 transition font-bold flex items-center justify-center gap-2"
                         >
                             <span id="submitBtnText">Post Notice</span>
                         </button>
@@ -306,7 +329,7 @@
                 class="modal bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             >
                 <div id="viewContent" class="p-8"></div>
-                <div class="p-8 pt-0 flex justify-end gap-3">
+                <div class="p-8 pt-0 flex justify-end">
                     <button
                         onclick="hideViewModal()"
                         class="px-6 py-2 border border-white/10 rounded-xl hover:bg-white/5 transition"
@@ -323,7 +346,7 @@
             class="hidden fixed inset-0 bg-black/80 backdrop-blur-xl z-[200] flex items-center justify-center p-4"
         >
             <div
-                class="bg-zinc-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl"
+                class="bg-zinc-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl modal"
             >
                 <div class="text-center mb-8">
                     <div
@@ -336,67 +359,83 @@
                         Enter credentials to manage board
                     </p>
                 </div>
-                <div class="space-y-4">
+                <form
+                    onsubmit="
+                        event.preventDefault();
+                        attemptLogin();
+                    "
+                    class="space-y-4"
+                >
                     <input
                         id="loginUser"
                         type="text"
                         placeholder="Username"
+                        required
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-400"
                     />
                     <input
                         id="loginPass"
                         type="password"
                         placeholder="Password"
+                        required
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-400"
                     />
                     <button
-                        onclick="attemptLogin()"
+                        type="submit"
+                        id="loginSubmitBtn"
                         class="w-full py-4 bg-cyan-500 text-zinc-950 rounded-xl font-bold hover:bg-cyan-400 transition shadow-lg shadow-cyan-500/20 mt-2"
                     >
                         Login
                     </button>
                     <button
-                        onclick="
-                            document
-                                .getElementById('loginModal')
-                                .classList.add('hidden')
-                        "
+                        type="button"
+                        onclick="hideLoginModal()"
                         class="w-full py-2 text-white/40 hover:text-white transition text-sm"
                     >
                         Dismiss
                     </button>
-                </div>
+                </form>
             </div>
         </div>
 
         <script>
+            // API Configuration
+            const API_URL = "https://futi-noticeboard.netlify.app/";
+
+            // State Management
             let notices = [];
             let isLoggedIn = false;
             let currentSearch = "";
             let currentCategory = "all";
             let activeAttachment = null;
-            const API_BASE = "http://localhost:5000"; // Update for production
 
-            // Search with debounce
-            let searchTimeout;
+            // Initialize
+            window.onload = () => {
+                if (localStorage.getItem("nb_auth") === "true") {
+                    isLoggedIn = true;
+                    document.getElementById("authBtn").textContent = "Logout";
+                }
+                fetchNotices();
+            };
+
+            // Search Logic
             document
                 .getElementById("searchInput")
                 .addEventListener("input", (e) => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        currentSearch = e.target.value;
-                        fetchNotices();
-                    }, 400);
+                    currentSearch = e.target.value.toLowerCase();
+                    renderNotices();
                 });
 
             async function fetchNotices() {
+                const grid = document.getElementById("noticesGrid");
+                grid.innerHTML = `<div class="col-span-full text-center py-20"><div class="loading-spinner mx-auto mb-4"></div><p class="text-white/40">Loading notices...</p></div>`;
+
                 try {
-                    const url = `${API_BASE}/api/notices?q=${encodeURIComponent(currentSearch)}`;
-                    const res = await fetch(url);
+                    const res = await fetch(`${API_URL}/notices`);
                     notices = await res.json();
                     renderNotices();
-                } catch (e) {
-                    console.error("Backend offline");
+                } catch (err) {
+                    grid.innerHTML = `<div class="col-span-full text-center py-20 text-red-400"><i class="fa-solid fa-circle-exclamation text-4xl mb-2"></i><p>Failed to load notices. Ensure server is running.</p></div>`;
                 }
             }
 
@@ -404,10 +443,16 @@
                 const grid = document.getElementById("noticesGrid");
                 grid.innerHTML = "";
 
-                const filtered =
-                    currentCategory === "all"
-                        ? notices
-                        : notices.filter((n) => n.category === currentCategory);
+                let filtered = notices.filter((n) => {
+                    const matchesSearch =
+                        n.title.toLowerCase().includes(currentSearch) ||
+                        n.author.toLowerCase().includes(currentSearch) ||
+                        n.content.toLowerCase().includes(currentSearch);
+                    const matchesCat =
+                        currentCategory === "all" ||
+                        n.category === currentCategory;
+                    return matchesSearch && matchesCat;
+                });
 
                 if (filtered.length === 0) {
                     grid.innerHTML = `<div class="col-span-full text-center py-20 text-white/20"><i class="fa-solid fa-folder-open text-6xl mb-4"></i><p>No notices found</p></div>`;
@@ -424,20 +469,20 @@
 
                     card.innerHTML = `
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/5 ${getCatColor(notice.category)}">${notice.category}</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/10 ${getCatColor(notice.category)}">${notice.category}</span>
                             ${
                                 isLoggedIn
                                     ? `
                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                <button onclick="event.stopPropagation(); editNotice('${notice._id}')" class="p-2 text-white/40 hover:text-cyan-400 transition"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button onclick="event.stopPropagation(); deleteNotice('${notice._id}')" class="p-2 text-white/40 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="event.stopPropagation(); editNotice('${notice._id}')" class="p-2 text-white/40 hover:text-cyan-400 transition" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="event.stopPropagation(); deleteNotice('${notice._id}')" class="p-2 text-white/40 hover:text-red-400 transition" title="Delete"><i class="fa-solid fa-trash"></i></button>
                             </div>`
                                     : ""
                             }
                         </div>
                         <h3 class="text-xl font-bold mb-2 group-hover:text-cyan-400 transition line-clamp-2">${notice.title}</h3>
                         <p class="text-white/50 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">${notice.content}</p>
-                        ${hasAttachment ? `<div class="mb-4 text-xs font-bold text-cyan-400/60 flex items-center gap-1"><i class="fa-solid fa-paperclip"></i> Attachment included</div>` : ""}
+                        ${hasAttachment ? `<div class="mb-4 text-xs font-bold text-cyan-400/60 flex items-center gap-1"><i class="fa-solid fa-paperclip"></i> Attachment</div>` : ""}
                         <div class="pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-white/30 font-medium">
                             <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-circle text-white/20"></i> ${notice.author}</span>
                             <span>${new Date(notice.date).toLocaleDateString()}</span>
@@ -448,10 +493,16 @@
             }
 
             function getCatColor(cat) {
-                if (cat === "urgent") return "text-red-400";
-                if (cat === "events") return "text-emerald-400";
-                if (cat === "academic") return "text-violet-400";
-                return "text-white/40";
+                switch (cat) {
+                    case "urgent":
+                        return "text-red-400";
+                    case "events":
+                        return "text-emerald-400";
+                    case "academic":
+                        return "text-violet-400";
+                    default:
+                        return "text-cyan-400";
+                }
             }
 
             // File Handling
@@ -486,7 +537,10 @@
             async function handleFormSubmit(e) {
                 e.preventDefault();
                 const id = document.getElementById("editId").value;
-                const data = {
+                const submitBtn = document.getElementById("submitBtn");
+                const btnText = document.getElementById("submitBtnText");
+
+                const payload = {
                     title: document.getElementById("formTitle").value,
                     author: document.getElementById("formAuthor").value,
                     category: document.getElementById("formCategory").value,
@@ -494,21 +548,36 @@
                     attachment: activeAttachment,
                 };
 
-                const method = id ? "PUT" : "POST";
-                const url = id
-                    ? `${API_BASE}/api/notices/${id}`
-                    : `${API_BASE}/api/notices`;
+                btnText.innerHTML = `<div class="loading-spinner"></div>`;
+                submitBtn.disabled = true;
 
                 try {
-                    await fetch(url, {
-                        method: method,
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(data),
-                    });
-                    hideCreateModal();
-                    fetchNotices();
+                    let res;
+                    if (id) {
+                        res = await fetch(`${API_URL}/notices/${id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload),
+                        });
+                    } else {
+                        res = await fetch(`${API_URL}/notices`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload),
+                        });
+                    }
+
+                    if (res.ok) {
+                        hideCreateModal();
+                        fetchNotices();
+                    } else {
+                        alert("Error saving notice.");
+                    }
                 } catch (err) {
-                    alert("Error saving notice");
+                    alert("Network error. Is the backend running?");
+                } finally {
+                    btnText.textContent = id ? "Save Changes" : "Post Notice";
+                    submitBtn.disabled = false;
                 }
             }
 
@@ -517,8 +586,8 @@
                     showLogin();
                     return;
                 }
-                document.getElementById("editId").value = "";
                 document.getElementById("noticeForm").reset();
+                document.getElementById("editId").value = "";
                 document.getElementById("modalTitle").textContent =
                     "Post New Notice";
                 document.getElementById("submitBtnText").textContent =
@@ -530,10 +599,12 @@
                 document
                     .getElementById("createModal")
                     .classList.remove("hidden");
+                document.getElementById("createModal").classList.add("flex");
             }
 
             function hideCreateModal() {
                 document.getElementById("createModal").classList.add("hidden");
+                document.getElementById("createModal").classList.remove("flex");
             }
 
             function editNotice(id) {
@@ -566,14 +637,21 @@
                 document
                     .getElementById("createModal")
                     .classList.remove("hidden");
+                document.getElementById("createModal").classList.add("flex");
             }
 
             async function deleteNotice(id) {
                 if (!confirm("Delete this notice forever?")) return;
-                await fetch(`${API_BASE}/api/notices/${id}`, {
-                    method: "DELETE",
-                });
-                fetchNotices();
+
+                try {
+                    const res = await fetch(`${API_URL}/notices/${id}`, {
+                        method: "DELETE",
+                    });
+                    if (res.ok) fetchNotices();
+                    else alert("Failed to delete.");
+                } catch (err) {
+                    alert("Error connecting to server.");
+                }
             }
 
             function viewNotice(id) {
@@ -583,7 +661,7 @@
                 let attachHtml = "";
                 if (n.attachment && n.attachment.data) {
                     if (n.attachment.type.startsWith("image/")) {
-                        attachHtml = `<div class="mt-8 rounded-2xl overflow-hidden border border-white/10"><img src="${n.attachment.data}" class="w-full h-auto" /></div>`;
+                        attachHtml = `<div class="mt-8 rounded-2xl overflow-hidden border border-white/10 shadow-2xl"><img src="${n.attachment.data}" class="w-full h-auto" /></div>`;
                     } else {
                         attachHtml = `
                             <div class="mt-8 p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between">
@@ -591,7 +669,7 @@
                                     <i class="fa-solid fa-file-lines text-2xl text-cyan-400"></i>
                                     <div><p class="font-bold text-sm">${n.attachment.name}</p><p class="text-xs text-white/30">Document Attachment</p></div>
                                 </div>
-                                <a href="${n.attachment.data}" download="${n.attachment.name}" class="p-2 bg-cyan-500 text-zinc-950 rounded-lg"><i class="fa-solid fa-download"></i></a>
+                                <a href="${n.attachment.data}" download="${n.attachment.name}" class="p-2 bg-cyan-500 text-zinc-950 rounded-lg hover:bg-cyan-400"><i class="fa-solid fa-download"></i></a>
                             </div>
                         `;
                     }
@@ -599,9 +677,9 @@
 
                 document.getElementById("viewContent").innerHTML = `
                     <div class="flex items-center gap-2 mb-4">
-                         <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/5 ${getCatColor(n.category)}">${n.category}</span>
+                         <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/10 ${getCatColor(n.category)}">${n.category}</span>
                     </div>
-                    <h2 class="text-3xl font-black mb-2">${n.title}</h2>
+                    <h2 class="text-3xl font-black mb-2 leading-tight">${n.title}</h2>
                     <div class="flex items-center gap-4 text-xs text-white/40 mb-8 pb-8 border-b border-white/5">
                         <span class="flex items-center gap-1.5"><i class="fa-solid fa-user"></i> By ${n.author}</span>
                         <span>•</span>
@@ -616,38 +694,54 @@
 
             function hideViewModal() {
                 document.getElementById("viewModal").classList.add("hidden");
+                document.getElementById("viewModal").classList.remove("flex");
             }
 
+            // Auth Logic
             function showLogin() {
                 document
                     .getElementById("loginModal")
                     .classList.remove("hidden");
+                document.getElementById("loginModal").classList.add("flex");
+                document.getElementById("loginUser").value = "";
+                document.getElementById("loginPass").value = "";
+            }
+
+            function hideLoginModal() {
+                document.getElementById("loginModal").classList.add("hidden");
+                document.getElementById("loginModal").classList.remove("flex");
             }
 
             async function attemptLogin() {
                 const username = document.getElementById("loginUser").value;
                 const password = document.getElementById("loginPass").value;
+                const btn = document.getElementById("loginSubmitBtn");
+
                 try {
-                    const res = await fetch(`${API_BASE}/api/login`, {
+                    const res = await fetch(`${API_URL}/login`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ username, password }),
                     });
                     const data = await res.json();
+
                     if (data.success) {
                         isLoggedIn = true;
                         localStorage.setItem("nb_auth", "true");
-                        document
-                            .getElementById("loginModal")
-                            .classList.add("hidden");
+                        hideLoginModal();
                         document.getElementById("authBtn").textContent =
                             "Logout";
                         renderNotices();
                     } else {
-                        alert("Invalid Credentials");
+                        btn.textContent = "Invalid Credentials";
+                        btn.classList.replace("bg-cyan-500", "bg-red-500");
+                        setTimeout(() => {
+                            btn.textContent = "Login";
+                            btn.classList.replace("bg-red-500", "bg-cyan-500");
+                        }, 2000);
                     }
-                } catch (e) {
-                    alert("Server Error");
+                } catch (err) {
+                    alert("Could not connect to auth server.");
                 }
             }
 
@@ -664,22 +758,23 @@
 
             function filterByCategory(cat) {
                 currentCategory = cat;
-                document
-                    .querySelectorAll('[id^="filter-"]')
-                    .forEach((el) => el.classList.remove("active-tab"));
+                document.querySelectorAll('[id^="filter-"]').forEach((el) => {
+                    el.classList.remove("active-tab");
+                });
                 document
                     .getElementById(`filter-${cat}`)
                     .classList.add("active-tab");
+
+                const titles = {
+                    all: "Latest Notices",
+                    urgent: "Urgent Announcements",
+                    events: "Upcoming Events",
+                    academic: "Academic Updates",
+                };
+                document.getElementById("pageTitle").textContent =
+                    titles[cat] || "Notices";
                 renderNotices();
             }
-
-            window.onload = () => {
-                if (localStorage.getItem("nb_auth") === "true") {
-                    isLoggedIn = true;
-                    document.getElementById("authBtn").textContent = "Logout";
-                }
-                fetchNotices();
-            };
         </script>
     </body>
 </html>
