@@ -21,8 +21,8 @@
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
             .notice-card:hover {
-                transform: translateY(-4px) scale(1.03);
-                box-shadow: 0 25px 50px -12px rgb(0 212 255 / 0.15);
+                transform: translateY(-4px);
+                box-shadow: 0 20px 40px -12px rgb(0 212 255 / 0.2);
             }
             .modal {
                 animation: modalPop 0.3s ease forwards;
@@ -37,43 +37,12 @@
                     transform: scale(1);
                 }
             }
-            .sidebar-link {
-                transition: all 0.2s ease;
-            }
-            .sidebar-link:hover {
-                background-color: rgba(0, 212, 255, 0.1);
-                color: #00d4ff;
-            }
             .active-tab {
                 border-bottom: 3px solid #00d4ff;
                 color: #00d4ff;
             }
-            @media (max-width: 240px) {
-                .max-w-screen-2xl {
-                    padding-left: 12px !important;
-                    padding-right: 12px !important;
-                }
-                nav .py-5 {
-                    padding-top: 12px !important;
-                    padding-bottom: 12px !important;
-                }
-                h1 {
-                    font-size: 1.55rem !important;
-                }
-                .text-4xl {
-                    font-size: 1.75rem !important;
-                }
-                #postNoticeBtn {
-                    padding: 10px 14px !important;
-                    font-size: 15px !important;
-                }
-                #postNoticeBtn span {
-                    display: none;
-                }
-                #noticesGrid {
-                    grid-template-columns: 1fr !important;
-                    gap: 16px !important;
-                }
+            .hide-scrollbar::-webkit-scrollbar {
+                display: none;
             }
         </style>
     </head>
@@ -81,288 +50,266 @@
         <!-- HEADER -->
         <nav class="bg-zinc-900 border-b border-white/10 sticky top-0 z-50">
             <div
-                class="max-w-screen-2xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between"
+                class="max-w-screen-2xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4"
             >
-                <div class="flex items-center gap-x-3">
+                <div class="flex items-center gap-x-3 shrink-0">
                     <div
-                        class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center text-2xl shadow-inner"
+                        class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center text-xl"
                     >
                         📋
                     </div>
-                    <h1 class="text-1xl font-bold tracking-tighter">
+                    <h1
+                        class="text-2xl font-bold tracking-tight hidden lg:block"
+                    >
                         NoticeBoard
                     </h1>
-                    <span
-                        class="text-xs font-medium px-3 py-1 bg-white/10 text-cyan-300 rounded-3xl hidden sm:inline"
-                        >CAMPUS HUB</span
-                    >
                 </div>
-                <div class="flex-1 max-w-xl mx-4 relative">
+
+                <div class="flex-1 max-w-xl relative">
                     <i
-                        class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-white/40"
+                        class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-white/40"
                     ></i>
                     <input
                         id="searchInput"
                         type="text"
-                        placeholder="Search notices..."
-                        class="w-full bg-white/10 border border-white/20 focus:border-cyan-400 rounded-3xl py-4 pl-12 pr-6 text-white placeholder:text-white/40 focus:outline-none text-lg"
+                        placeholder="Search notices, authors..."
+                        class="w-full bg-white/5 border border-white/10 focus:border-cyan-400 rounded-2xl py-3 pl-11 pr-4 text-white outline-none transition"
                     />
                 </div>
-                <button
-                    onclick="showCreateModal()"
-                    class="flex items-center gap-x-3 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 px-6 md:px-8 py-3 md:py-4 rounded-3xl font-semibold text-base md:text-lg shadow-lg shadow-cyan-500/30 transition"
-                >
-                    <i class="fa-solid fa-plus"></i>
-                    <span class="hidden sm:inline">Post Notice</span>
-                </button>
-            </div>
 
-            <div
-                class="max-w-screen-2xl mx-auto px-4 md:px-8 border-t border-white/10 py-3 flex gap-3 overflow-x-auto text-sm font-medium"
-            >
-                <button
-                    onclick="filterByCategory('all')"
-                    id="filter-all"
-                    class="active-tab flex-shrink-0 flex items-center gap-x-2 px-6 py-2 rounded-3xl hover:bg-white/5 whitespace-nowrap"
-                >
-                    All Notices
-                </button>
-                <button
-                    onclick="filterByCategory('urgent')"
-                    id="filter-urgent"
-                    class="flex-shrink-0 flex items-center gap-x-2 px-6 py-2 rounded-3xl hover:bg-white/5 whitespace-nowrap"
-                >
-                    <i
-                        class="fa-solid fa-triangle-exclamation text-red-400"
-                    ></i>
-                    Urgent
-                </button>
-                <button
-                    onclick="filterByCategory('events')"
-                    id="filter-events"
-                    class="flex-shrink-0 flex items-center gap-x-2 px-6 py-2 rounded-3xl hover:bg-white/5 whitespace-nowrap"
-                >
-                    <i class="fa-solid fa-calendar text-emerald-400"></i> Events
-                </button>
-                <button
-                    onclick="filterByCategory('academic')"
-                    id="filter-academic"
-                    class="flex-shrink-0 flex items-center gap-x-2 px-6 py-2 rounded-3xl hover:bg-white/5 whitespace-nowrap"
-                >
-                    <i class="fa-solid fa-graduation-cap text-violet-400"></i>
-                    Academic
-                </button>
-                <button
-                    onclick="filterByCategory('admin')"
-                    id="filter-admin"
-                    class="flex-shrink-0 flex items-center gap-x-2 px-6 py-2 rounded-3xl hover:bg-white/5 whitespace-nowrap"
-                >
-                    <i class="fa-solid fa-building text-amber-400"></i>
-                    Administrative
-                </button>
+                <div class="flex items-center gap-3">
+                    <button
+                        id="authBtn"
+                        onclick="toggleAuth()"
+                        class="px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 transition text-sm font-medium"
+                    >
+                        Login
+                    </button>
+                    <button
+                        onclick="showCreateModal()"
+                        class="bg-cyan-500 hover:bg-cyan-400 px-5 py-2.5 rounded-xl font-bold text-zinc-950 transition flex items-center gap-2"
+                    >
+                        <i class="fa-solid fa-plus"></i
+                        ><span class="hidden sm:inline">Post</span>
+                    </button>
+                </div>
             </div>
         </nav>
 
-        <div class="max-w-screen-2xl mx-auto px-4 md:px-8 py-8 flex gap-8">
-            <div
-                class="w-72 bg-zinc-900/80 border border-white/10 rounded-3xl p-6 h-fit sticky top-24 hidden md:block"
-            >
-                <div
-                    class="text-xs uppercase tracking-widest text-white/40 mb-4 px-3"
-                >
-                    Quick Links
-                </div>
-                <a
-                    onclick="filterByCategory('all')"
-                    class="sidebar-link flex items-center gap-x-4 px-4 py-4 rounded-2xl text-lg mb-1"
-                    ><i class="fa-solid fa-house w-5"></i
-                    ><span>Dashboard</span></a
-                >
-                <a
-                    onclick="filterByCategory('my-posts')"
-                    class="sidebar-link flex items-center gap-x-4 px-4 py-4 rounded-2xl text-lg mb-1"
-                    ><i class="fa-solid fa-user-pen w-5"></i
-                    ><span>My Posted Notices</span></a
-                >
-                <div class="h-px bg-white/10 my-6"></div>
-                <div
-                    class="text-xs uppercase tracking-widest text-white/40 mb-4 px-3"
-                >
-                    Categories
-                </div>
-                <div
-                    onclick="filterByCategory('urgent')"
-                    class="flex justify-between items-center px-4 py-3 hover:bg-white/5 rounded-2xl cursor-pointer"
-                >
-                    <div class="flex items-center gap-x-3">
-                        <i
-                            class="fa-solid fa-triangle-exclamation text-red-400"
-                        ></i
-                        ><span>Urgent</span>
-                    </div>
-                    <span
-                        id="count-urgent"
-                        class="text-xs bg-red-400/10 text-red-400 px-3 py-1 rounded-3xl"
-                        >0</span
+        <main class="max-w-screen-2xl mx-auto px-4 md:px-8 py-8">
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Sidebar -->
+                <aside class="w-full md:w-64 space-y-6">
+                    <div
+                        class="bg-zinc-900/50 border border-white/10 rounded-2xl p-4"
                     >
-                </div>
-                <div
-                    onclick="filterByCategory('events')"
-                    class="flex justify-between items-center px-4 py-3 hover:bg-white/5 rounded-2xl cursor-pointer"
-                >
-                    <div class="flex items-center gap-x-3">
-                        <i class="fa-solid fa-calendar text-emerald-400"></i
-                        ><span>Events</span>
+                        <p
+                            class="text-xs font-bold text-white/30 uppercase tracking-widest mb-4 px-2"
+                        >
+                            Categories
+                        </p>
+                        <nav class="space-y-1">
+                            <button
+                                onclick="filterByCategory('all')"
+                                id="filter-all"
+                                class="active-tab w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 transition"
+                            >
+                                <span class="flex items-center gap-3"
+                                    ><i
+                                        class="fa-solid fa-layer-group text-cyan-400"
+                                    ></i
+                                    >All</span
+                                >
+                            </button>
+                            <button
+                                onclick="filterByCategory('urgent')"
+                                id="filter-urgent"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 transition"
+                            >
+                                <span class="flex items-center gap-3"
+                                    ><i
+                                        class="fa-solid fa-circle-exclamation text-red-400"
+                                    ></i
+                                    >Urgent</span
+                                >
+                            </button>
+                            <button
+                                onclick="filterByCategory('events')"
+                                id="filter-events"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 transition"
+                            >
+                                <span class="flex items-center gap-3"
+                                    ><i
+                                        class="fa-solid fa-calendar text-emerald-400"
+                                    ></i
+                                    >Events</span
+                                >
+                            </button>
+                            <button
+                                onclick="filterByCategory('academic')"
+                                id="filter-academic"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 transition"
+                            >
+                                <span class="flex items-center gap-3"
+                                    ><i
+                                        class="fa-solid fa-graduation-cap text-violet-400"
+                                    ></i
+                                    >Academic</span
+                                >
+                            </button>
+                        </nav>
                     </div>
-                    <span
-                        id="count-events"
-                        class="text-xs bg-emerald-400/10 text-emerald-400 px-3 py-1 rounded-3xl"
-                        >0</span
-                    >
-                </div>
-                <div
-                    onclick="filterByCategory('academic')"
-                    class="flex justify-between items-center px-4 py-3 hover:bg-white/5 rounded-2xl cursor-pointer"
-                >
-                    <div class="flex items-center gap-x-3">
-                        <i
-                            class="fa-solid fa-graduation-cap text-violet-400"
-                        ></i
-                        ><span>Academic</span>
+                </aside>
+
+                <!-- Content Area -->
+                <div class="flex-1">
+                    <div class="flex items-end justify-between mb-8">
+                        <div>
+                            <h2 id="pageTitle" class="text-3xl font-bold">
+                                Latest Notices
+                            </h2>
+                            <p class="text-white/40">
+                                Official updates and campus news
+                            </p>
+                        </div>
                     </div>
-                    <span
-                        id="count-academic"
-                        class="text-xs bg-violet-400/10 text-violet-400 px-3 py-1 rounded-3xl"
-                        >0</span
+                    <div
+                        id="noticesGrid"
+                        class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
                     >
-                </div>
-                <div
-                    onclick="filterByCategory('admin')"
-                    class="flex justify-between items-center px-4 py-3 hover:bg-white/5 rounded-2xl cursor-pointer"
-                >
-                    <div class="flex items-center gap-x-3">
-                        <i class="fa-solid fa-building text-amber-400"></i
-                        ><span>Administrative</span>
+                        <!-- Notices injected here -->
                     </div>
-                    <span
-                        id="count-admin"
-                        class="text-xs bg-amber-400/10 text-amber-400 px-3 py-1 rounded-3xl"
-                        >0</span
-                    >
                 </div>
             </div>
+        </main>
 
-            <div class="flex-1">
-                <h2 id="pageTitle" class="text-4xl font-semibold mb-2">
-                    All Notices
-                </h2>
-                <p id="pageSubtitle" class="text-white/50 mb-8">
-                    Real-time notices • Powered by MongoDB Atlas
-                </p>
-                <div
-                    id="noticesGrid"
-                    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
-                ></div>
-            </div>
-        </div>
-
-        <!-- Create Modal -->
+        <!-- Post/Edit Modal -->
         <div
             id="createModal"
-            onclick="if (event.target === this) hideCreateModal();"
-            class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-[100] flex items-center justify-center"
+            class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
         >
             <div
-                class="modal bg-zinc-900 rounded-3xl w-full max-w-2xl mx-4 shadow-2xl"
+                class="modal bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-xl overflow-hidden"
             >
-                <div class="px-8 pt-8 pb-4">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 id="modalTitle" class="text-3xl font-semibold">
-                            Create New Notice
-                        </h3>
-                        <button
-                            onclick="hideCreateModal()"
-                            class="text-3xl text-white/40 hover:text-white"
+                <div
+                    class="p-6 border-b border-white/10 flex justify-between items-center"
+                >
+                    <h3 id="modalTitle" class="text-xl font-bold">
+                        Post New Notice
+                    </h3>
+                    <button
+                        onclick="hideCreateModal()"
+                        class="text-white/40 hover:text-white"
+                    >
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                <form
+                    id="noticeForm"
+                    onsubmit="handleFormSubmit(event)"
+                    class="p-6 space-y-4"
+                >
+                    <input type="hidden" id="editId" />
+                    <div>
+                        <label
+                            class="text-xs font-bold text-white/40 uppercase mb-2 block"
+                            >Your Display Name</label
                         >
-                            <i class="fa-solid fa-xmark"></i>
+                        <input
+                            id="formAuthor"
+                            required
+                            placeholder="e.g. Dr. Smith"
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-cyan-400"
+                        />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2 sm:col-span-1">
+                            <label
+                                class="text-xs font-bold text-white/40 uppercase mb-2 block"
+                                >Notice Title</label
+                            >
+                            <input
+                                id="formTitle"
+                                required
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-cyan-400"
+                            />
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <label
+                                class="text-xs font-bold text-white/40 uppercase mb-2 block"
+                                >Category</label
+                            >
+                            <select
+                                id="formCategory"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-cyan-400"
+                            >
+                                <option value="urgent">Urgent</option>
+                                <option value="events">Events</option>
+                                <option value="academic">Academic</option>
+                                <option value="admin" selected>General</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="text-xs font-bold text-white/40 uppercase mb-2 block"
+                            >Content</label
+                        >
+                        <textarea
+                            id="formContent"
+                            required
+                            rows="4"
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-cyan-400 resize-none"
+                        ></textarea>
+                    </div>
+                    <div>
+                        <label
+                            class="text-xs font-bold text-white/40 uppercase mb-2 block"
+                            >Attachment (Max 5MB)</label
+                        >
+                        <input
+                            type="file"
+                            id="formFile"
+                            accept="image/*,.pdf,.doc,.docx"
+                            class="text-sm text-white/40 file:bg-white/10 file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:mr-4 file:cursor-pointer hover:file:bg-white/20"
+                        />
+                        <p
+                            id="fileNameDisplay"
+                            class="mt-2 text-cyan-400 text-xs hidden"
+                        ></p>
+                    </div>
+                    <div class="pt-4 flex gap-3">
+                        <button
+                            type="button"
+                            onclick="hideCreateModal()"
+                            class="flex-1 py-3 border border-white/10 rounded-xl hover:bg-white/5 transition font-bold"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="flex-1 py-3 bg-cyan-500 text-zinc-950 rounded-xl hover:bg-cyan-400 transition font-bold"
+                        >
+                            <span id="submitBtnText">Post Notice</span>
                         </button>
                     </div>
-                    <form id="noticeForm" onsubmit="handleFormSubmit(event)">
-                        <input type="hidden" id="editId" />
-                        <div class="grid grid-cols-2 gap-4 mb-6">
-                            <div>
-                                <label
-                                    class="text-sm font-medium text-white/70 block mb-2"
-                                    >Title</label
-                                ><input
-                                    id="formTitle"
-                                    required
-                                    type="text"
-                                    class="w-full bg-white/10 border border-white/20 focus:border-cyan-400 rounded-3xl px-6 py-5 text-lg outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    class="text-sm font-medium text-white/70 block mb-2"
-                                    >Category</label
-                                ><select
-                                    id="formCategory"
-                                    class="w-full bg-white/10 border border-white/20 focus:border-cyan-400 rounded-3xl px-6 py-5 text-lg outline-none"
-                                >
-                                    <option value="urgent">Urgent</option>
-                                    <option value="events">Events</option>
-                                    <option value="academic">Academic</option>
-                                    <option value="admin" selected>
-                                        Administrative
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-6">
-                            <label
-                                class="text-sm font-medium text-white/70 block mb-2"
-                                >Full Content</label
-                            ><textarea
-                                id="formContent"
-                                required
-                                rows="6"
-                                class="w-full bg-white/10 border border-white/20 focus:border-cyan-400 rounded-3xl px-6 py-5 text-lg outline-none resize-none"
-                            ></textarea>
-                        </div>
-                        <div class="flex gap-4">
-                            <button
-                                type="button"
-                                onclick="hideCreateModal()"
-                                class="flex-1 py-6 text-lg font-semibold border border-white/30 rounded-3xl hover:bg-white/5"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                class="flex-1 py-6 text-lg font-semibold bg-gradient-to-r from-cyan-400 to-blue-500 rounded-3xl"
-                            >
-                                <span id="submitBtnText">Post Notice</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
 
         <!-- View Modal -->
         <div
             id="viewModal"
-            onclick="if (event.target === this) hideViewModal();"
-            class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-[100] flex items-center justify-center"
+            class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4"
         >
             <div
-                class="modal bg-zinc-900 rounded-3xl w-full max-w-3xl mx-4 p-8 shadow-2xl"
+                class="modal bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             >
-                <div id="viewContent" class="space-y-6"></div>
-                <div class="flex justify-end mt-10">
+                <div id="viewContent" class="p-8"></div>
+                <div class="p-8 pt-0 flex justify-end gap-3">
                     <button
                         onclick="hideViewModal()"
-                        class="px-10 py-4 text-lg font-medium border border-white/30 rounded-3xl hover:bg-white/5"
+                        class="px-6 py-2 border border-white/10 rounded-xl hover:bg-white/5 transition"
                     >
                         Close
                     </button>
@@ -370,190 +317,311 @@
             </div>
         </div>
 
+        <!-- Login Modal -->
+        <div
+            id="loginModal"
+            class="hidden fixed inset-0 bg-black/80 backdrop-blur-xl z-[200] flex items-center justify-center p-4"
+        >
+            <div
+                class="bg-zinc-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl"
+            >
+                <div class="text-center mb-8">
+                    <div
+                        class="w-16 h-16 bg-cyan-500/10 text-cyan-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
+                    >
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold">Staff Login</h3>
+                    <p class="text-white/40">
+                        Enter credentials to manage board
+                    </p>
+                </div>
+                <div class="space-y-4">
+                    <input
+                        id="loginUser"
+                        type="text"
+                        placeholder="Username"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-400"
+                    />
+                    <input
+                        id="loginPass"
+                        type="password"
+                        placeholder="Password"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-400"
+                    />
+                    <button
+                        onclick="attemptLogin()"
+                        class="w-full py-4 bg-cyan-500 text-zinc-950 rounded-xl font-bold hover:bg-cyan-400 transition shadow-lg shadow-cyan-500/20 mt-2"
+                    >
+                        Login
+                    </button>
+                    <button
+                        onclick="
+                            document
+                                .getElementById('loginModal')
+                                .classList.add('hidden')
+                        "
+                        class="w-full py-2 text-white/40 hover:text-white transition text-sm"
+                    >
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <script>
             let notices = [];
-            let currentFilter = "all";
-            let editModeId = null;
             let isLoggedIn = false;
-            const API_BASE = "https://futi-noticeboard.onrender.com";
+            let currentSearch = "";
+            let currentCategory = "all";
+            let activeAttachment = null;
+            const API_BASE = "http://localhost:5000"; // Update for production
+
+            // Search with debounce
+            let searchTimeout;
+            document
+                .getElementById("searchInput")
+                .addEventListener("input", (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        currentSearch = e.target.value;
+                        fetchNotices();
+                    }, 400);
+                });
 
             async function fetchNotices() {
                 try {
-                    const res = await fetch(`${API_BASE}/api/notices`);
+                    const url = `${API_BASE}/api/notices?q=${encodeURIComponent(currentSearch)}`;
+                    const res = await fetch(url);
                     notices = await res.json();
-                    renderNotices(notices);
+                    renderNotices();
                 } catch (e) {
-                    console.log("%c⚠️ Backend not running", "color:#00d4ff");
-                    notices = [];
-                    renderNotices([]);
+                    console.error("Backend offline");
                 }
             }
 
-            function renderNotices(filteredNotices) {
+            function renderNotices() {
                 const grid = document.getElementById("noticesGrid");
                 grid.innerHTML = "";
-                if (filteredNotices.length === 0) {
-                    grid.innerHTML = `<div class="col-span-full text-center py-20"><i class="fa-solid fa-inbox text-7xl text-white/10 mb-6"></i><p class="text-2xl font-medium text-white/60">No notices yet</p></div>`;
+
+                const filtered =
+                    currentCategory === "all"
+                        ? notices
+                        : notices.filter((n) => n.category === currentCategory);
+
+                if (filtered.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full text-center py-20 text-white/20"><i class="fa-solid fa-folder-open text-6xl mb-4"></i><p>No notices found</p></div>`;
                     return;
                 }
-                filteredNotices.forEach((notice) => {
-                    const cardHTML = `
-                <div onclick="viewNotice('${notice._id}')" class="notice-card bg-zinc-900 border border-white/10 rounded-3xl p-6 cursor-pointer group">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-center gap-x-3">
-                            <i class="fa-solid ${getIconForCategory(notice.category)} text-3xl text-cyan-400"></i>
-                            <span class="uppercase text-xs font-bold tracking-widest px-4 py-2 rounded-3xl ${notice.category === "urgent" ? "bg-red-400/10 text-red-400" : notice.category === "events" ? "bg-emerald-400/10 text-emerald-400" : notice.category === "academic" ? "bg-violet-400/10 text-violet-400" : "bg-amber-400/10 text-amber-400"}">${notice.category}</span>
+
+                filtered.forEach((notice) => {
+                    const hasAttachment =
+                        notice.attachment && notice.attachment.data;
+                    const card = document.createElement("div");
+                    card.className =
+                        "notice-card bg-zinc-900 border border-white/10 rounded-2xl p-6 cursor-pointer relative group flex flex-col";
+                    card.onclick = () => viewNotice(notice._id);
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/5 ${getCatColor(notice.category)}">${notice.category}</span>
+                            ${
+                                isLoggedIn
+                                    ? `
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="event.stopPropagation(); editNotice('${notice._id}')" class="p-2 text-white/40 hover:text-cyan-400 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="event.stopPropagation(); deleteNotice('${notice._id}')" class="p-2 text-white/40 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                            </div>`
+                                    : ""
+                            }
                         </div>
-                        <button onclick="event.stopImmediatePropagation(); deleteNoticeFromBackend('${notice._id}');" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                    <h3 class="text-2xl font-semibold mb-3 leading-tight">${notice.title}</h3>
-                    <p class="text-white/70 line-clamp-3 mb-6">${notice.content}</p>
-                    <div class="flex items-center justify-between text-sm">
-                        <div class="flex items-center gap-x-2"><i class="fa-solid fa-user text-white/40"></i><span class="text-white/60">${notice.author}</span></div>
-                        <div class="flex items-center gap-x-2 text-white/60"><i class="fa-solid fa-clock"></i><span>${new Date(notice.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>
-                    </div>
-                </div>`;
-                    grid.innerHTML += cardHTML;
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-cyan-400 transition line-clamp-2">${notice.title}</h3>
+                        <p class="text-white/50 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">${notice.content}</p>
+                        ${hasAttachment ? `<div class="mb-4 text-xs font-bold text-cyan-400/60 flex items-center gap-1"><i class="fa-solid fa-paperclip"></i> Attachment included</div>` : ""}
+                        <div class="pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-white/30 font-medium">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-circle text-white/20"></i> ${notice.author}</span>
+                            <span>${new Date(notice.date).toLocaleDateString()}</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
                 });
-                updateSidebarCounts();
             }
 
-            function getIconForCategory(cat) {
-                if (cat === "urgent") return "fa-triangle-exclamation";
-                if (cat === "events") return "fa-calendar";
-                if (cat === "academic") return "fa-graduation-cap";
-                return "fa-building";
+            function getCatColor(cat) {
+                if (cat === "urgent") return "text-red-400";
+                if (cat === "events") return "text-emerald-400";
+                if (cat === "academic") return "text-violet-400";
+                return "text-white/40";
             }
 
-            function updateSidebarCounts() {
-                const counts = {
-                    urgent: notices.filter((n) => n.category === "urgent")
-                        .length,
-                    events: notices.filter((n) => n.category === "events")
-                        .length,
-                    academic: notices.filter((n) => n.category === "academic")
-                        .length,
-                    admin: notices.filter((n) => n.category === "admin").length,
-                };
-                document.getElementById("count-urgent").textContent =
-                    counts.urgent;
-                document.getElementById("count-events").textContent =
-                    counts.events;
-                document.getElementById("count-academic").textContent =
-                    counts.academic;
-                document.getElementById("count-admin").textContent =
-                    counts.admin;
-            }
+            // File Handling
+            document
+                .getElementById("formFile")
+                .addEventListener("change", function (e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
 
-            function filterByCategory(category) {
-                currentFilter = category;
-                document
-                    .querySelectorAll(
-                        "#filter-all, #filter-urgent, #filter-events, #filter-academic, #filter-admin",
-                    )
-                    .forEach((btn) => {
-                        btn.classList.remove("active-tab");
-                        if (
-                            btn.id === `filter-${category}` ||
-                            (category === "all" && btn.id === "filter-all")
-                        )
-                            btn.classList.add("active-tab");
-                    });
-                let filtered = notices;
-                if (category !== "all")
-                    filtered = notices.filter((n) => n.category === category);
-                renderNotices(filtered);
-            }
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert("File is too large (Max 5MB)");
+                        this.value = "";
+                        return;
+                    }
 
-            function viewNotice(id) {
-                const notice = notices.find((n) => n._id === id);
-                if (!notice) return;
-                document.getElementById("viewContent").innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <span class="uppercase text-xs font-bold tracking-widest px-5 py-2 rounded-3xl ${notice.category === "urgent" ? "bg-red-400/10 text-red-400" : notice.category === "events" ? "bg-emerald-400/10 text-emerald-400" : notice.category === "academic" ? "bg-violet-400/10 text-violet-400" : "bg-amber-400/10 text-amber-400"}">${notice.category}</span>
-                        <h2 class="text-4xl font-semibold mt-4 leading-none">${notice.title}</h2>
-                    </div>
-                    <i onclick="hideViewModal()" class="fa-solid fa-xmark text-4xl text-white/30 cursor-pointer"></i>
-                </div>
-                <div class="flex items-center gap-x-8 mt-8 text-white/60">
-                    <div class="flex items-center gap-x-2"><i class="fa-solid fa-user"></i><span>${notice.author}</span></div>
-                    <div class="flex items-center gap-x-2"><i class="fa-solid fa-clock"></i><span>${new Date(notice.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span></div>
-                </div>
-                <div class="mt-10 text-lg leading-relaxed text-white/80">${notice.content}</div>
-            `;
-                document.getElementById("viewModal").classList.remove("hidden");
-                document.getElementById("viewModal").classList.add("flex");
-            }
-
-            function hideViewModal() {
-                const modal = document.getElementById("viewModal");
-                modal.classList.add("hidden");
-                modal.classList.remove("flex");
-            }
-
-            function hideCreateModal() {
-                const modal = document.getElementById("createModal");
-                modal.classList.add("hidden");
-                modal.classList.remove("flex");
-            }
-
-            function showCreateModal() {
-                if (!isLoggedIn) {
-                    showLoginModal();
-                    return;
-                }
-                editModeId = null;
-                document.getElementById("modalTitle").textContent =
-                    "Create New Notice";
-                document.getElementById("submitBtnText").textContent =
-                    "Post Notice";
-                document.getElementById("noticeForm").reset();
-                document
-                    .getElementById("createModal")
-                    .classList.remove("hidden");
-                document.getElementById("createModal").classList.add("flex");
-            }
+                    const reader = new FileReader();
+                    reader.onload = function () {
+                        activeAttachment = {
+                            data: reader.result,
+                            name: file.name,
+                            type: file.type,
+                        };
+                        document.getElementById("fileNameDisplay").textContent =
+                            `✓ Attached: ${file.name}`;
+                        document
+                            .getElementById("fileNameDisplay")
+                            .classList.remove("hidden");
+                    };
+                    reader.readAsDataURL(file);
+                });
 
             async function handleFormSubmit(e) {
                 e.preventDefault();
-                const title = document.getElementById("formTitle").value;
-                const category = document.getElementById("formCategory").value;
-                const content = document.getElementById("formContent").value;
+                const id = document.getElementById("editId").value;
                 const data = {
-                    title,
-                    content,
-                    category,
-                    author: "Master Admin",
+                    title: document.getElementById("formTitle").value,
+                    author: document.getElementById("formAuthor").value,
+                    category: document.getElementById("formCategory").value,
+                    content: document.getElementById("formContent").value,
+                    attachment: activeAttachment,
                 };
 
+                const method = id ? "PUT" : "POST";
+                const url = id
+                    ? `${API_BASE}/api/notices/${id}`
+                    : `${API_BASE}/api/notices`;
+
                 try {
-                    await fetch(`${API_BASE}/api/notices`, {
-                        method: "POST",
+                    await fetch(url, {
+                        method: method,
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(data),
                     });
                     hideCreateModal();
                     fetchNotices();
                 } catch (err) {
-                    alert("✅ Notice saved successfully!");
-                    hideCreateModal();
-                    fetchNotices();
+                    alert("Error saving notice");
                 }
             }
 
-            function showLoginModal() {
-                const html = `<div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
-                <div class="bg-zinc-900 rounded-3xl p-8 w-full max-w-md">
-                    <h3 class="text-3xl font-semibold mb-6 text-center">Master Admin Login</h3>
-                    <input id="loginUser" type="text" placeholder="Username" class="w-full bg-white/10 border border-white/20 rounded-3xl px-6 py-5 mb-4 text-lg">
-                    <input id="loginPass" type="password" placeholder="Enter Password" class="w-full bg-white/10 border border-white/20 rounded-3xl px-6 py-5 mb-6 text-lg">
-                    <button onclick="attemptLogin()" class="w-full py-6 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-3xl font-semibold text-lg">Login</button>
-                </div>
-            </div>`;
-                document.body.insertAdjacentHTML("beforeend", html);
+            function showCreateModal() {
+                if (!isLoggedIn) {
+                    showLogin();
+                    return;
+                }
+                document.getElementById("editId").value = "";
+                document.getElementById("noticeForm").reset();
+                document.getElementById("modalTitle").textContent =
+                    "Post New Notice";
+                document.getElementById("submitBtnText").textContent =
+                    "Post Notice";
+                document
+                    .getElementById("fileNameDisplay")
+                    .classList.add("hidden");
+                activeAttachment = null;
+                document
+                    .getElementById("createModal")
+                    .classList.remove("hidden");
+            }
+
+            function hideCreateModal() {
+                document.getElementById("createModal").classList.add("hidden");
+            }
+
+            function editNotice(id) {
+                const notice = notices.find((n) => n._id === id);
+                if (!notice) return;
+
+                document.getElementById("editId").value = id;
+                document.getElementById("formTitle").value = notice.title;
+                document.getElementById("formAuthor").value = notice.author;
+                document.getElementById("formCategory").value = notice.category;
+                document.getElementById("formContent").value = notice.content;
+
+                activeAttachment = notice.attachment || null;
+                if (activeAttachment) {
+                    document.getElementById("fileNameDisplay").textContent =
+                        `Current: ${activeAttachment.name}`;
+                    document
+                        .getElementById("fileNameDisplay")
+                        .classList.remove("hidden");
+                } else {
+                    document
+                        .getElementById("fileNameDisplay")
+                        .classList.add("hidden");
+                }
+
+                document.getElementById("modalTitle").textContent =
+                    "Edit Notice";
+                document.getElementById("submitBtnText").textContent =
+                    "Save Changes";
+                document
+                    .getElementById("createModal")
+                    .classList.remove("hidden");
+            }
+
+            async function deleteNotice(id) {
+                if (!confirm("Delete this notice forever?")) return;
+                await fetch(`${API_BASE}/api/notices/${id}`, {
+                    method: "DELETE",
+                });
+                fetchNotices();
+            }
+
+            function viewNotice(id) {
+                const n = notices.find((notice) => notice._id === id);
+                if (!n) return;
+
+                let attachHtml = "";
+                if (n.attachment && n.attachment.data) {
+                    if (n.attachment.type.startsWith("image/")) {
+                        attachHtml = `<div class="mt-8 rounded-2xl overflow-hidden border border-white/10"><img src="${n.attachment.data}" class="w-full h-auto" /></div>`;
+                    } else {
+                        attachHtml = `
+                            <div class="mt-8 p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-file-lines text-2xl text-cyan-400"></i>
+                                    <div><p class="font-bold text-sm">${n.attachment.name}</p><p class="text-xs text-white/30">Document Attachment</p></div>
+                                </div>
+                                <a href="${n.attachment.data}" download="${n.attachment.name}" class="p-2 bg-cyan-500 text-zinc-950 rounded-lg"><i class="fa-solid fa-download"></i></a>
+                            </div>
+                        `;
+                    }
+                }
+
+                document.getElementById("viewContent").innerHTML = `
+                    <div class="flex items-center gap-2 mb-4">
+                         <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/5 ${getCatColor(n.category)}">${n.category}</span>
+                    </div>
+                    <h2 class="text-3xl font-black mb-2">${n.title}</h2>
+                    <div class="flex items-center gap-4 text-xs text-white/40 mb-8 pb-8 border-b border-white/5">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-user"></i> By ${n.author}</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-clock"></i> ${new Date(n.date).toLocaleString()}</span>
+                    </div>
+                    <div class="text-white/70 leading-loose text-lg whitespace-pre-wrap">${n.content}</div>
+                    ${attachHtml}
+                `;
+                document.getElementById("viewModal").classList.remove("hidden");
+                document.getElementById("viewModal").classList.add("flex");
+            }
+
+            function hideViewModal() {
+                document.getElementById("viewModal").classList.add("hidden");
+            }
+
+            function showLogin() {
+                document
+                    .getElementById("loginModal")
+                    .classList.remove("hidden");
             }
 
             async function attemptLogin() {
@@ -568,25 +636,48 @@
                     const data = await res.json();
                     if (data.success) {
                         isLoggedIn = true;
-                        document.getElementById("loginModal").remove();
-                        alert("✅ Login successful!");
+                        localStorage.setItem("nb_auth", "true");
+                        document
+                            .getElementById("loginModal")
+                            .classList.add("hidden");
+                        document.getElementById("authBtn").textContent =
+                            "Logout";
+                        renderNotices();
                     } else {
-                        alert("❌ Wrong credentials");
+                        alert("Invalid Credentials");
                     }
                 } catch (e) {
-                    alert("Backend not running");
+                    alert("Server Error");
                 }
             }
 
-            async function deleteNoticeFromBackend(id) {
-                if (!confirm("Delete this notice permanently?")) return;
-                await fetch(`${API_BASE}/api/notices/${id}`, {
-                    method: "DELETE",
-                });
-                fetchNotices();
+            function toggleAuth() {
+                if (isLoggedIn) {
+                    isLoggedIn = false;
+                    localStorage.removeItem("nb_auth");
+                    document.getElementById("authBtn").textContent = "Login";
+                    renderNotices();
+                } else {
+                    showLogin();
+                }
+            }
+
+            function filterByCategory(cat) {
+                currentCategory = cat;
+                document
+                    .querySelectorAll('[id^="filter-"]')
+                    .forEach((el) => el.classList.remove("active-tab"));
+                document
+                    .getElementById(`filter-${cat}`)
+                    .classList.add("active-tab");
+                renderNotices();
             }
 
             window.onload = () => {
+                if (localStorage.getItem("nb_auth") === "true") {
+                    isLoggedIn = true;
+                    document.getElementById("authBtn").textContent = "Logout";
+                }
                 fetchNotices();
             };
         </script>
