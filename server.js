@@ -4,7 +4,7 @@ const cors = require("cors");
 
 const app = express();
 
-// 1. INCREASED LIMITS (Crucial for attachments/Base64)
+// 1. INCREASED LIMITS
 app.use(cors());
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
@@ -26,9 +26,9 @@ const NoticeSchema = new mongoose.Schema({
   author: { type: String, default: "Master Admin" },
   date: { type: Date, default: Date.now },
   attachment: {
-    data: String, // The actual binary data as Base64
-    name: String, // Filename for download
-    type: String, // MIME type
+    data: String, // Base64 Data
+    name: String,
+    type: String,
   },
 });
 
@@ -48,17 +48,31 @@ app.get("/api/notices", async (req, res) => {
     const notices = await Notice.find().sort({ date: -1 });
     res.json(notices);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Database fetch failed" });
   }
 });
 
 app.post("/api/notices", async (req, res) => {
   try {
+    // Validation for MongoDB 16MB limit
+    if (
+      req.body.attachment &&
+      req.body.attachment.data.length > 15 * 1024 * 1024
+    ) {
+      return res
+        .status(400)
+        .json({ error: "File too large for database (Max ~12MB)" });
+    }
     const notice = new Notice(req.body);
     await notice.save();
     res.status(201).json(notice);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Catch MongoDB BSON size errors specifically
+    if (err.message.includes("maximum BSON size")) {
+      res.status(413).json({ error: "File size exceeds database limits." });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
