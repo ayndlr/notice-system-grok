@@ -4,8 +4,7 @@ const cors = require("cors");
 
 const app = express();
 
-// 1. GLOBAL MIDDLEWARE
-// Increased limit to 20mb to handle high-res images or documents
+// 1. INCREASED LIMITS (Crucial for attachments/Base64)
 app.use(cors());
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
@@ -16,26 +15,24 @@ const MONGO_URI =
 
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("✅ Database connected successfully"))
-  .catch((err) => console.error("❌ Database connection error:", err.message));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ Connection Error:", err));
 
-// 3. DATA MODEL
-// Structured 'attachment' as an object to store metadata
-const Notice = mongoose.model(
-  "Notice",
-  new mongoose.Schema({
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    category: { type: String, required: true },
-    author: { type: String, default: "Master Admin" },
-    date: { type: Date, default: Date.now },
-    attachment: {
-      data: String, // Base64 String
-      name: String, // Filename (e.g. "schedule.pdf")
-      type: String, // MIME type (e.g. "application/pdf")
-    },
-  }),
-);
+// 3. UPDATED SCHEMA
+const NoticeSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  category: { type: String, required: true },
+  author: { type: String, default: "Master Admin" },
+  date: { type: Date, default: Date.now },
+  attachment: {
+    data: String, // The actual binary data as Base64
+    name: String, // Filename for download
+    type: String, // MIME type
+  },
+});
+
+const Notice = mongoose.model("Notice", NoticeSchema);
 
 // 4. ROUTES
 app.post("/api/login", (req, res) => {
@@ -43,7 +40,7 @@ app.post("/api/login", (req, res) => {
   if (username === "ISSTICKZ" && password === "issticks@661") {
     return res.json({ success: true });
   }
-  res.status(401).json({ success: false, message: "Invalid credentials" });
+  res.status(401).json({ success: false });
 });
 
 app.get("/api/notices", async (req, res) => {
@@ -51,7 +48,7 @@ app.get("/api/notices", async (req, res) => {
     const notices = await Notice.find().sort({ date: -1 });
     res.json(notices);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch notices" });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -79,11 +76,11 @@ app.put("/api/notices/:id", async (req, res) => {
 app.delete("/api/notices/:id", async (req, res) => {
   try {
     await Notice.findByIdAndDelete(req.params.id);
-    res.json({ message: "Notice deleted" });
+    res.json({ message: "Deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
