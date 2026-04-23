@@ -46,16 +46,6 @@
                 max-height: 90vh;
                 overflow-y: auto;
             }
-            .skeleton {
-                background: linear-gradient(
-                    90deg,
-                    #18181b 25%,
-                    #27272a 50%,
-                    #18181b 75%
-                );
-                background-size: 200% 100%;
-                animation: loading 1.5s infinite;
-            }
             @keyframes loading {
                 from {
                     background-position: 200% 0;
@@ -93,7 +83,7 @@
                     <input
                         type="text"
                         id="searchInput"
-                        placeholder="Search notices, titles, or authors..."
+                        placeholder="Search notices..."
                         class="w-full bg-zinc-900/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all"
                     />
                 </div>
@@ -121,7 +111,6 @@
         <div
             class="max-w-[1600px] mx-auto px-4 md:px-8 py-8 flex flex-col md:flex-row gap-8"
         >
-            <!-- Sidebar -->
             <aside class="w-full md:w-72 shrink-0 space-y-8">
                 <div>
                     <p
@@ -226,7 +215,6 @@
                 </div>
             </aside>
 
-            <!-- Content -->
             <main class="flex-1">
                 <div class="mb-8">
                     <h2
@@ -236,24 +224,22 @@
                         Latest Notices
                     </h2>
                     <p id="subHeading" class="text-zinc-500 text-sm">
-                        Real-time campus updates and announcements
+                        Real-time campus updates
                     </p>
                 </div>
                 <div
                     id="noticesGrid"
                     class="grid grid-cols-1 lg:grid-cols-2 gap-6"
-                >
-                    <!-- Data goes here -->
-                </div>
+                ></div>
             </main>
         </div>
 
-        <!-- Modals -->
+        <!-- Overlay -->
         <div
             id="modalOverlay"
             class="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4"
         >
-            <!-- Post Modal -->
+            <!-- Create/Edit Modal -->
             <div
                 id="postModal"
                 class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl hidden modal-container"
@@ -409,7 +395,6 @@
         <script>
             const API_URL = "https://futi-noticeboard.onrender.com/api";
             let allNotices = [];
-            let filteredNotices = [];
             let isLoggedIn = localStorage.getItem("nb_auth") === "true";
             let tempFile = null;
 
@@ -422,12 +407,11 @@
                 try {
                     const res = await fetch(`${API_URL}/notices`);
                     allNotices = await res.json();
-                    filteredNotices = [...allNotices];
                     updateCounts();
                     renderGrid(allNotices);
                 } catch (err) {
                     document.getElementById("noticesGrid").innerHTML =
-                        `<p class="text-red-400">Server is currently offline.</p>`;
+                        `<p class="text-red-400">Server unreachable.</p>`;
                 }
             }
 
@@ -451,19 +435,28 @@
                     ? data
                           .map(
                               (n) => `
-                <div class="notice-card bg-zinc-900/40 rounded-3xl p-6 cursor-pointer" onclick="viewNotice('${n._id}')">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-[10px] font-black uppercase px-2 py-1 bg-zinc-800 rounded ${getCatColor(n.category)}">${n.category}</span>
-                        ${isLoggedIn ? `<button onclick="event.stopPropagation(); deleteNotice('${n._id}')" class="text-zinc-500 hover:text-red-400"><i class="fa-solid fa-trash-can"></i></button>` : ""}
+                    <div class="notice-card bg-zinc-900/40 rounded-3xl p-6 cursor-pointer relative group" onclick="viewNotice('${n._id}')">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] font-black uppercase px-2 py-1 bg-zinc-800 rounded ${getCatColor(n.category)}">${n.category}</span>
+                            ${
+                                isLoggedIn
+                                    ? `
+                                <div class="flex gap-3">
+                                    <button onclick="event.stopPropagation(); editNotice('${n._id}')" class="text-zinc-500 hover:text-cyan-400 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                                    <button onclick="event.stopPropagation(); deleteNotice('${n._id}')" class="text-zinc-500 hover:text-red-400 transition"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            `
+                                    : ""
+                            }
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 line-clamp-2">${n.title}</h3>
+                        <p class="text-zinc-500 text-sm line-clamp-3 mb-6">${n.content}</p>
+                        <div class="pt-4 border-t border-white/5 flex justify-between items-center text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                            <span>${n.author}</span>
+                            <span>${new Date(n.date).toLocaleDateString()}</span>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold mb-2 line-clamp-2">${n.title}</h3>
-                    <p class="text-zinc-500 text-sm line-clamp-3 mb-6">${n.content}</p>
-                    <div class="pt-4 border-t border-white/5 flex justify-between items-center text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                        <span>${n.author}</span>
-                        <span>${new Date(n.date).toLocaleDateString()}</span>
-                    </div>
-                </div>
-            `,
+                `,
                           )
                           .join("")
                     : `<div class="col-span-full py-20 text-center text-zinc-600">No notices found.</div>`;
@@ -479,7 +472,6 @@
                 return map[cat] || "text-cyan-400";
             }
 
-            // Filters & Search
             function applyFilter(cat) {
                 document
                     .querySelectorAll("aside button")
@@ -487,15 +479,11 @@
                 document
                     .getElementById(`nav-${cat}`)
                     .classList.add("active-filter");
-                document.getElementById("mainHeading").innerText =
-                    cat === "all"
-                        ? "Latest Notices"
-                        : cat.charAt(0).toUpperCase() + cat.slice(1);
-                filteredNotices =
+                const data =
                     cat === "all"
                         ? allNotices
                         : allNotices.filter((n) => n.category === cat);
-                renderGrid(filteredNotices);
+                renderGrid(data);
             }
 
             function filterMyNotices() {
@@ -505,12 +493,12 @@
                 document
                     .getElementById("nav-my")
                     .classList.add("active-filter");
-                filteredNotices = allNotices.filter(
+                const data = allNotices.filter(
                     (n) =>
                         n.author.toLowerCase().includes("admin") ||
                         n.author.toLowerCase().includes("stickz"),
                 );
-                renderGrid(filteredNotices);
+                renderGrid(data);
             }
 
             document
@@ -520,20 +508,17 @@
                     const results = allNotices.filter(
                         (n) =>
                             n.title.toLowerCase().includes(q) ||
-                            n.content.toLowerCase().includes(q),
+                            n.content.toLowerCase().includes(q) ||
+                            n.author.toLowerCase().includes(q),
                     );
                     renderGrid(results);
                 });
 
-            // Binary Handling
             function handleFile(e) {
                 const file = e.target.files[0];
                 if (!file) return;
-                if (file.size > 10 * 1024 * 1024) {
-                    alert("File is too big for the database (Max 10MB)");
-                    e.target.value = "";
-                    return;
-                }
+                if (file.size > 10 * 1024 * 1024)
+                    return alert("File too large (Max 10MB)");
                 const reader = new FileReader();
                 reader.onload = () => {
                     tempFile = {
@@ -547,6 +532,7 @@
             }
 
             async function submitNotice() {
+                const id = document.getElementById("editId").value;
                 const btn = document.getElementById("pBtn");
                 const data = {
                     title: document.getElementById("pTitle").value,
@@ -557,94 +543,109 @@
                 };
 
                 if (!data.title || !data.content)
-                    return alert("Title and Content are required.");
+                    return alert("Required fields missing");
 
                 btn.disabled = true;
                 btn.innerText = "Processing...";
 
                 try {
-                    const res = await fetch(`${API_URL}/notices`, {
-                        method: "POST",
+                    const method = id ? "PUT" : "POST";
+                    const url = id
+                        ? `${API_URL}/notices/${id}`
+                        : `${API_URL}/notices`;
+
+                    const res = await fetch(url, {
+                        method: method,
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(data),
                     });
 
-                    if (!res.ok) {
-                        const errData = await res.json();
-                        throw new Error(
-                            errData.error || "Server rejected the post.",
-                        );
+                    if (res.ok) {
+                        await fetchNotices();
+                        closeModals();
+                    } else {
+                        const err = await res.json();
+                        alert("Error: " + err.error);
                     }
-
-                    await fetchNotices();
-                    closeModals();
-                } catch (err) {
-                    alert("Error: " + err.message);
+                } catch (e) {
+                    alert("Submission failed");
                 } finally {
                     btn.disabled = false;
                     btn.innerText = "Publish Notice";
                 }
             }
 
+            function editNotice(id) {
+                const n = allNotices.find((x) => x._id === id);
+                if (!n) return;
+
+                document.getElementById("editId").value = n._id;
+                document.getElementById("pTitle").value = n.title;
+                document.getElementById("pContent").value = n.content;
+                document.getElementById("pCat").value = n.category;
+                document.getElementById("pAuthor").value = n.author;
+                document.getElementById("pModalTitle").innerText =
+                    "Edit Announcement";
+                document.getElementById("pBtn").innerText = "Update Notice";
+                document.getElementById("pFileName").innerText =
+                    n.fileName || "Keep current or upload new";
+                tempFile = null;
+                showModal("postModal");
+            }
+
             function viewNotice(id) {
                 const n = allNotices.find((x) => x._id === id);
+                if (!n) return;
                 const area = document.getElementById("viewArea");
                 area.innerHTML = `
-                <span class="text-xs font-black uppercase text-cyan-500 mb-2 block">${n.category}</span>
-                <h2 class="text-3xl font-bold mb-4">${n.title}</h2>
-                <p class="text-sm text-zinc-500 mb-8 border-b border-white/5 pb-4">${n.author} • ${new Date(n.date).toLocaleDateString()}</p>
-                <div class="text-zinc-300 leading-relaxed whitespace-pre-wrap mb-10 text-lg">${n.content}</div>
-                ${
-                    n.attachment
-                        ? `
-                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-4">
-                            <i class="fa-solid fa-file-pdf text-3xl text-cyan-500"></i>
-                            <div>
-                                <p class="text-sm font-bold text-white">${n.attachment.name}</p>
-                                <p class="text-[10px] text-zinc-500">Official Attachment</p>
+                    <span class="text-xs font-black uppercase text-cyan-500 mb-2 block">${n.category}</span>
+                    <h2 class="text-3xl font-bold mb-4">${n.title}</h2>
+                    <p class="text-sm text-zinc-500 mb-8 border-b border-white/5 pb-4">${n.author} • ${new Date(n.date).toLocaleDateString()}</p>
+                    <div class="text-zinc-300 whitespace-pre-wrap mb-10 text-lg">${n.content}</div>
+                    ${
+                        n.fileId
+                            ? `
+                        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <i class="fa-solid fa-file-pdf text-3xl text-cyan-500"></i>
+                                <div><p class="text-sm font-bold text-white">${n.fileName}</p></div>
                             </div>
+                            <a href="${API_URL}/files/${n.fileId}" target="_blank" class="bg-cyan-500 text-zinc-900 px-6 py-2 rounded-xl font-bold text-sm">Open File</a>
                         </div>
-                        <a href="${n.attachment.data}" download="${n.attachment.name}" class="bg-cyan-500 text-zinc-900 px-6 py-2 rounded-xl font-bold text-sm">Download</a>
-                    </div>
-                `
-                        : ""
-                }
-            `;
+                    `
+                            : ""
+                    }
+                `;
                 showModal("viewModal");
             }
 
             async function deleteNotice(id) {
-                if (confirm("Delete this notice permanently?")) {
-                    await fetch(`${API_URL}/notices/${id}`, {
+                if (!confirm("Permanently delete this notice?")) return;
+                try {
+                    const res = await fetch(`${API_URL}/notices/${id}`, {
                         method: "DELETE",
                     });
-                    fetchNotices();
+                    if (res.ok) fetchNotices();
+                } catch (e) {
+                    alert("Delete failed");
                 }
             }
 
-            // Auth & Modals
             async function handleLogin() {
                 const username = document.getElementById("lUser").value;
                 const password = document.getElementById("lPass").value;
-                try {
-                    const res = await fetch(`${API_URL}/login`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ username, password }),
-                    });
-                    if (res.ok) {
-                        isLoggedIn = true;
-                        localStorage.setItem("nb_auth", "true");
-                        updateAuthUI();
-                        closeModals();
-                        fetchNotices();
-                    } else {
-                        alert("Invalid credentials");
-                    }
-                } catch (err) {
-                    alert("Login failed");
-                }
+                const res = await fetch(`${API_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
+                if (res.ok) {
+                    isLoggedIn = true;
+                    localStorage.setItem("nb_auth", "true");
+                    updateAuthUI();
+                    closeModals();
+                    fetchNotices();
+                } else alert("Invalid credentials");
             }
 
             function toggleAuth() {
@@ -653,9 +654,7 @@
                     localStorage.removeItem("nb_auth");
                     updateAuthUI();
                     fetchNotices();
-                } else {
-                    showModal("loginModal");
-                }
+                } else showModal("loginModal");
             }
 
             function updateAuthUI() {
@@ -671,9 +670,13 @@
             }
 
             function openPostModal() {
+                document.getElementById("editId").value = "";
                 document.getElementById("pTitle").value = "";
                 document.getElementById("pContent").value = "";
                 document.getElementById("pAuthor").value = "Master Admin";
+                document.getElementById("pModalTitle").innerText =
+                    "New Announcement";
+                document.getElementById("pBtn").innerText = "Publish Notice";
                 document.getElementById("pFileName").innerText = "Maximum 10MB";
                 tempFile = null;
                 showModal("postModal");

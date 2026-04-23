@@ -1,40 +1,41 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { GridFSBucket } = require("mongodb");
 
 const app = express();
 
-// 1. INCREASED LIMITS
 app.use(cors());
-app.use(express.json({ limit: "20mb" }));
-app.use(express.urlencoded({ limit: "20mb", extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// 2. MONGODB CONNECTION
 const MONGO_URI =
   "mongodb://notice-board-sys:notice-board-sys-sticks@ac-w5b57gt-shard-00-00.wcrralm.mongodb.net:27017,ac-w5b57gt-shard-00-01.wcrralm.mongodb.net:27017,ac-w5b57gt-shard-00-02.wcrralm.mongodb.net:27017/?ssl=true&replicaSet=atlas-q26fhi-shard-0&authSource=admin&appName=Cluster0";
 
+let bucket;
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    bucket = new GridFSBucket(mongoose.connection.db, {
+      bucketName: "attachments",
+    });
+  })
   .catch((err) => console.error("❌ Connection Error:", err));
 
-// 3. UPDATED SCHEMA
 const NoticeSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
   category: { type: String, required: true },
   author: { type: String, default: "Master Admin" },
   date: { type: Date, default: Date.now },
-  attachment: {
-    data: String, // Base64 Data
-    name: String,
-    type: String,
-  },
+  fileId: mongoose.Schema.Types.ObjectId,
+  fileName: String,
+  fileType: String,
 });
 
 const Notice = mongoose.model("Notice", NoticeSchema);
 
-// 4. ROUTES
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "ISSTICKZ" && password === "issticks@661") {
@@ -54,31 +55,64 @@ app.get("/api/notices", async (req, res) => {
 
 app.post("/api/notices", async (req, res) => {
   try {
-    // Validation for MongoDB 16MB limit
-    if (
-      req.body.attachment &&
-      req.body.attachment.data.length > 15 * 1024 * 1024
-    ) {
-      return res
-        .status(400)
-        .json({ error: "File too large for database (Max ~12MB)" });
+    const { title, content, category, author, attachment } = req.body;
+    let fileId = null;
+
+    if (attachment && attachment.data) {
+      const buffer = Buffer.from(attachment.data.split(",")[1], "base64");
+      const uploadStream = bucket.openUploadStream(attachment.name, {
+        contentType: attachment.type,
+      });
+      uploadStream.end(buffer);
+      fileId = uploadStream.id;
     }
-    const notice = new Notice(req.body);
+
+    const notice = new Notice({
+      title,
+      content,
+      category,
+      author,
+      fileId,
+      fileName: attachment?.name,
+      fileType: attachment?.type,
+    });
+
     await notice.save();
     res.status(201).json(notice);
   } catch (err) {
-    // Catch MongoDB BSON size errors specifically
-    if (err.message.includes("maximum BSON size")) {
-      res.status(413).json({ error: "File size exceeds database limits." });
-    } else {
-      res.status(500).json({ error: err.message });
-    }
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.put("/api/notices/:id", async (req, res) => {
   try {
-    const updated = await Notice.findByIdAndUpdate(req.params.id, req.body, {
+    const { attachment, ...otherData } = req.body;
+    const existing = await Notice.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    let updateData = { ...otherData };
+
+    if (attachment && attachment.data) {
+      // Cleanup old file from GridFS
+      if (existing.fileId) {
+        try {
+          await bucket.delete(existing.fileId);
+        } catch (e) {}
+      }
+
+      // Upload new file
+      const buffer = Buffer.from(attachment.data.split(",")[1], "base64");
+      const uploadStream = bucket.openUploadStream(attachment.name, {
+        contentType: attachment.type,
+      });
+      uploadStream.end(buffer);
+
+      updateData.fileId = uploadStream.id;
+      updateData.fileName = attachment.name;
+      updateData.fileType = attachment.type;
+    }
+
+    const updated = await Notice.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     });
     res.json(updated);
@@ -89,12 +123,29 @@ app.put("/api/notices/:id", async (req, res) => {
 
 app.delete("/api/notices/:id", async (req, res) => {
   try {
+    const notice = await Notice.findById(req.params.id);
+    if (notice && notice.fileId) {
+      try {
+        await bucket.delete(notice.fileId);
+      } catch (e) {}
+    }
     await Notice.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted" });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.get("/api/files/:id", (req, res) => {
+  try {
+    const fileId = new mongoose.Types.ObjectId(req.params.id);
+    const downloadStream = bucket.openDownloadStream(fileId);
+    downloadStream.on("error", () => res.status(404).send("Not Found"));
+    downloadStream.pipe(res);
+  } catch (err) {
+    res.status(400).send("Invalid ID");
+  }
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
