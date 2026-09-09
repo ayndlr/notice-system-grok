@@ -38,7 +38,7 @@ const Notice = mongoose.model("Notice", NoticeSchema);
 
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
-  if (username === "ISSTICKZ" && password === "isstickz@661") {
+  if (username === "COMSCIENCE" && password === "COMSCI1234") {
     return res.json({ success: true });
   }
   res.status(401).json({ success: false });
